@@ -95,7 +95,7 @@ st.markdown(
 )
 
 # ---------- Hero ----------
-st.image(HERO, use_column_width=True, caption=None)
+st.image(HERO, use_container_width=True, caption=None)
 st.markdown('<div class="pill">Belleza • Cuidado de la piel • Bienestar</div>', unsafe_allow_html=True)
 st.markdown('<div class="title-hero">Todo para tu rutina de belleza y bienestar — simple y natural</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle-hero">Esmaltes de larga duración, cremas hidratantes y accesorios para tu día a día.</div>', unsafe_allow_html=True)
@@ -107,7 +107,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["✨ Destacados", "💅 Esmaltes", "🧴 Crema
 
 def product_card(image_path, title, desc, price):
     with st.container():
-        st.image(image_path, use_column_width=True)
+        st.image(image_path, use_container_width=True)
         st.markdown(f"**{title}**")
         st.markdown(f"<span class='muted'>{desc}</span>", unsafe_allow_html=True)
         st.markdown(f"<span class='price'>Bs {price:.2f}</span>", unsafe_allow_html=True)
