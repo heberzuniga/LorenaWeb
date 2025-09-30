@@ -1,13 +1,11 @@
-import streamlit as st
 from pathlib import Path
+import streamlit as st
 
 st.set_page_config(page_title="Belleza & Bienestar", page_icon="💅", layout="wide")
 
-# === Rutas robustas: siempre relativas a este archivo ===
 BASE = Path(__file__).resolve().parent
 ASSETS = BASE / "assets"
 
-# Archivos requeridos
 REQUIRED = {
     "HERO": ASSETS / "hero.jpg",
     "ESM1": ASSETS / "esmaltes1.jpg",
@@ -18,11 +16,9 @@ REQUIRED = {
     "BNS2": ASSETS / "bienestar2.jpg",
 }
 
-# Diagnóstico: si falta alguna imagen, muéstralo claramente
-missing = [name for name, p in REQUIRED.items() if not p.exists()]
+missing = [name for name, p in REQUIRED.items() if not p.exists() or p.stat().st_size == 0]
 if missing:
-    st.error("Faltan estas imágenes en la carpeta `assets/` (respetar nombres y mayúsculas/minúsculas): "
-             + ", ".join(f"{name.lower()}.jpg" for name in missing))
+    st.error("Faltan imágenes en la carpeta assets/: " + ", ".join(missing))
     st.info(f"Ubicación esperada de assets: {ASSETS}")
     st.stop()
 
@@ -31,7 +27,6 @@ ESM1 = REQUIRED["ESM1"]; ESM2 = REQUIRED["ESM2"]
 CRM1 = REQUIRED["CRM1"]; CRM2 = REQUIRED["CRM2"]
 BNS1 = REQUIRED["BNS1"]; BNS2 = REQUIRED["BNS2"]
 
-# === Estilos ===
 st.markdown(
     """
     <style>
@@ -46,7 +41,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# === Hero ===
 st.image(str(HERO), use_container_width=True)
 st.markdown('<div class="pill">Belleza • Cuidado de la piel • Bienestar</div>', unsafe_allow_html=True)
 st.markdown('<div class="title-hero">Todo para tu rutina de belleza y bienestar — simple y natural</div>', unsafe_allow_html=True)
@@ -54,10 +48,9 @@ st.markdown('<div class="subtitle-hero">Esmaltes de larga duración, cremas hidr
 
 st.divider()
 
-# === Tabs & productos ===
 tab1, tab2, tab3, tab4 = st.tabs(["✨ Destacados", "💅 Esmaltes", "🧴 Cremas & Serums", "🧘 Bienestar"])
 
-def product_card(image_path: Path, title: str, desc: str, price: float):
+def product_card(image_path, title, desc, price):
     st.image(str(image_path), use_container_width=True)
     st.markdown(f"**{title}**")
     st.markdown(f"<span class='muted'>{desc}</span>", unsafe_allow_html=True)
@@ -102,5 +95,5 @@ with st.form("newsletter"):
     if st.form_submit_button("Quiero suscribirme"):
         st.success("¡Gracias! Te llegará un mensaje con novedades (demo).")
 
-st.caption("🖼️ Usa la carpeta `assets/` junto a este archivo. Los nombres deben coincidir exactamente (Linux distingue mayúsculas/minúsculas).")
+st.caption("🖼️ Coloca tus fotos en la carpeta assets/ (junto a este archivo) y respeta los nombres de archivo.")
 st.markdown("<footer>© 2025 Belleza & Bienestar · Página demo con Streamlit</footer>", unsafe_allow_html=True)
