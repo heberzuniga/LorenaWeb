@@ -1,4 +1,3 @@
-
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import os
@@ -8,33 +7,60 @@ st.set_page_config(page_title="Belleza & Bienestar", page_icon="💅", layout="w
 ASSETS = "assets"
 os.makedirs(ASSETS, exist_ok=True)
 
+# ---------- Image helpers (Pillow 10+ compatible) ----------
 def _gradient(size, c1, c2):
-    """Create a vertical gradient image from color c1 to c2."""
-    from PIL import Image
+    """
+    Create a vertical gradient image from color c1 to c2.
+    Works without external assets so the app runs offline.
+    """
     w, h = size
     base = Image.new("RGB", size, c1)
     top = Image.new("RGB", size, c2)
-    mask = Image.new("L", size)
+
+    # Build a 1px-wide vertical alpha mask from 0..255 and stretch it
+    mask = Image.new("L", (1, h))
     for y in range(h):
-        mask.putpixel((0, y), int(255 * (y / (h - 1)) ))
-    mask = mask.resize(size)
+        mask.putpixel((0, y), int(255 * y / max(h - 1, 1)))
+    mask = mask.resize((w, h))
+
     base.paste(top, (0, 0), mask)
     return base
 
+def _text_size(draw, text, font):
+    """
+    Pillow >=10 removed textsize; prefer textbbox and fallback if needed.
+    """
+    try:
+        left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+        return right - left, bottom - top
+    except AttributeError:
+        # Pillow < 10
+        return draw.textsize(text, font=font)
+
 def _draw_label(img, text):
+    """
+    Draw a semi-transparent panel at the bottom with centered text.
+    Compatible with Pillow 10+.
+    """
     draw = ImageDraw.Draw(img)
     try:
         font = ImageFont.truetype("arial.ttf", 54)
-    except:
+    except Exception:
         font = ImageFont.load_default()
+
     w, h = img.size
-    tw, th = draw.textsize(text, font=font)
+    tw, th = _text_size(draw, text, font)
+
+    # Semi-transparent footer panel
     panel_h = th + 40
     panel = Image.new("RGBA", (w, panel_h), (0, 0, 0, 90))
+    img = img.convert("RGBA")
     img.paste(panel, (0, h - panel_h), panel)
+
+    # Centered white text
     draw = ImageDraw.Draw(img)
-    draw.text(((w - tw) / 2, h - panel_h + 20), text, fill=(255, 255, 255), font=font)
-    return img
+    draw.text(((w - tw) / 2, h - panel_h + 20), text, fill=(255, 255, 255, 255), font=font)
+    return img.convert("RGB")
 
 def ensure_asset(path, size, c1, c2, label):
     full = os.path.join(ASSETS, path)
@@ -44,6 +70,7 @@ def ensure_asset(path, size, c1, c2, label):
         img.save(full, "JPEG", quality=92)
     return full
 
+# Generate demo images so the app works offline (replace with your photos anytime)
 HERO = ensure_asset("hero.jpg", (1800, 700), (240, 215, 245), (187, 155, 209), "Belleza & Bienestar")
 ESM1 = ensure_asset("esmaltes1.jpg", (800, 600), (255, 209, 220), (255, 128, 171), "Esmaltes Ultra Shine")
 ESM2 = ensure_asset("esmaltes2.jpg", (800, 600), (255, 224, 230), (255, 153, 187), "Esmaltes Gel")
@@ -52,13 +79,13 @@ CRM2 = ensure_asset("cremas2.jpg", (800, 600), (255, 250, 240), (255, 204, 170),
 BNS1 = ensure_asset("bienestar1.jpg", (800, 600), (209, 245, 225), (153, 209, 187), "Aceites Esenciales")
 BNS2 = ensure_asset("bienestar2.jpg", (800, 600), (222, 246, 235), (170, 214, 194), "Kit Relax")
 
+# ---------- Styles ----------
 st.markdown(
     """
     <style>
     .title-hero { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.35rem; }
     .subtitle-hero { font-size: 1.05rem; opacity: 0.9; }
     .pill { display:inline-block; padding:6px 12px; border-radius:999px; background:#f1e8ff; color:#5a2ea6; font-weight:600; margin-bottom:8px;}
-    .card { border-radius: 16px; padding: 12px; background: #ffffff; border: 1px solid rgba(0,0,0,0.06); }
     .price { font-weight:700; }
     .muted { color: #6b7280; }
     footer { text-align:center; color:#6b7280; padding:1rem 0; font-size:0.9rem; }
@@ -67,6 +94,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# ---------- Hero ----------
 st.image(HERO, use_column_width=True, caption=None)
 st.markdown('<div class="pill">Belleza • Cuidado de la piel • Bienestar</div>', unsafe_allow_html=True)
 st.markdown('<div class="title-hero">Todo para tu rutina de belleza y bienestar — simple y natural</div>', unsafe_allow_html=True)
@@ -74,6 +102,7 @@ st.markdown('<div class="subtitle-hero">Esmaltes de larga duración, cremas hidr
 
 st.divider()
 
+# ---------- Tabs & products ----------
 tab1, tab2, tab3, tab4 = st.tabs(["✨ Destacados", "💅 Esmaltes", "🧴 Cremas & Serums", "🧘 Bienestar"])
 
 def product_card(image_path, title, desc, price):
@@ -112,6 +141,7 @@ with tab4:
 
 st.divider()
 
+# ---------- Newsletter (demo) ----------
 st.subheader("📬 Novedades y promociones")
 with st.form("newsletter"):
     col1, col2 = st.columns([2,1])
@@ -125,4 +155,3 @@ with st.form("newsletter"):
 
 st.caption("🖼️ Imágenes generadas dinámicamente en la app (sin necesidad de internet). Reemplaza por tus fotos si lo deseas: coloca archivos en la carpeta `assets/` y actualiza los nombres en el código.")
 st.markdown("<footer>© 2025 Belleza & Bienestar · Página demo con Streamlit</footer>", unsafe_allow_html=True)
-
