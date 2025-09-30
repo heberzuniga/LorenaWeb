@@ -1,83 +1,17 @@
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFont
 import os
 
 st.set_page_config(page_title="Belleza & Bienestar", page_icon="💅", layout="wide")
 
 ASSETS = "assets"
-os.makedirs(ASSETS, exist_ok=True)
-
-# ---------- Image helpers (Pillow 10+ compatible) ----------
-def _gradient(size, c1, c2):
-    """
-    Create a vertical gradient image from color c1 to c2.
-    Works without external assets so the app runs offline.
-    """
-    w, h = size
-    base = Image.new("RGB", size, c1)
-    top = Image.new("RGB", size, c2)
-
-    # Build a 1px-wide vertical alpha mask from 0..255 and stretch it
-    mask = Image.new("L", (1, h))
-    for y in range(h):
-        mask.putpixel((0, y), int(255 * y / max(h - 1, 1)))
-    mask = mask.resize((w, h))
-
-    base.paste(top, (0, 0), mask)
-    return base
-
-def _text_size(draw, text, font):
-    """
-    Pillow >=10 removed textsize; prefer textbbox and fallback if needed.
-    """
-    try:
-        left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
-        return right - left, bottom - top
-    except AttributeError:
-        # Pillow < 10
-        return draw.textsize(text, font=font)
-
-def _draw_label(img, text):
-    """
-    Draw a semi-transparent panel at the bottom with centered text.
-    Compatible with Pillow 10+.
-    """
-    draw = ImageDraw.Draw(img)
-    try:
-        font = ImageFont.truetype("arial.ttf", 54)
-    except Exception:
-        font = ImageFont.load_default()
-
-    w, h = img.size
-    tw, th = _text_size(draw, text, font)
-
-    # Semi-transparent footer panel
-    panel_h = th + 40
-    panel = Image.new("RGBA", (w, panel_h), (0, 0, 0, 90))
-    img = img.convert("RGBA")
-    img.paste(panel, (0, h - panel_h), panel)
-
-    # Centered white text
-    draw = ImageDraw.Draw(img)
-    draw.text(((w - tw) / 2, h - panel_h + 20), text, fill=(255, 255, 255, 255), font=font)
-    return img.convert("RGB")
-
-def ensure_asset(path, size, c1, c2, label):
-    full = os.path.join(ASSETS, path)
-    if not os.path.exists(full):
-        img = _gradient(size, c1, c2)
-        img = _draw_label(img, label)
-        img.save(full, "JPEG", quality=92)
-    return full
-
-# Generate demo images so the app works offline (replace with your photos anytime)
-HERO = ensure_asset("hero.jpg", (1800, 700), (240, 215, 245), (187, 155, 209), "Belleza & Bienestar")
-ESM1 = ensure_asset("esmaltes1.jpg", (800, 600), (255, 209, 220), (255, 128, 171), "Esmaltes Ultra Shine")
-ESM2 = ensure_asset("esmaltes2.jpg", (800, 600), (255, 224, 230), (255, 153, 187), "Esmaltes Gel")
-CRM1 = ensure_asset("cremas1.jpg", (800, 600), (255, 239, 213), (255, 204, 153), "Crema Hidratante")
-CRM2 = ensure_asset("cremas2.jpg", (800, 600), (255, 250, 240), (255, 204, 170), "Serum Nutritivo")
-BNS1 = ensure_asset("bienestar1.jpg", (800, 600), (209, 245, 225), (153, 209, 187), "Aceites Esenciales")
-BNS2 = ensure_asset("bienestar2.jpg", (800, 600), (222, 246, 235), (170, 214, 194), "Kit Relax")
+# Asegúrate de que las imágenes existan en el repositorio (incluidas en assets/)
+HERO = os.path.join(ASSETS, "hero.jpg")
+ESM1 = os.path.join(ASSETS, "esmaltes1.jpg")
+ESM2 = os.path.join(ASSETS, "esmaltes2.jpg")
+CRM1 = os.path.join(ASSETS, "cremas1.jpg")
+CRM2 = os.path.join(ASSETS, "cremas2.jpg")
+BNS1 = os.path.join(ASSETS, "bienestar1.jpg")
+BNS2 = os.path.join(ASSETS, "bienestar2.jpg")
 
 # ---------- Styles ----------
 st.markdown(
@@ -153,5 +87,5 @@ with st.form("newsletter"):
     if enviado:
         st.success("¡Gracias! Te llegará un mensaje con novedades (demo).")
 
-st.caption("🖼️ Imágenes generadas dinámicamente en la app (sin necesidad de internet). Reemplaza por tus fotos si lo deseas: coloca archivos en la carpeta `assets/` y actualiza los nombres en el código.")
+st.caption("🖼️ Imágenes incluidas en la carpeta `assets/`. Reemplaza por tus fotos si lo deseas y usa los mismos nombres de archivo.")
 st.markdown("<footer>© 2025 Belleza & Bienestar · Página demo con Streamlit</footer>", unsafe_allow_html=True)
