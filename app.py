@@ -1,8 +1,10 @@
 from pathlib import Path
 import streamlit as st
+import os
 
 st.set_page_config(page_title="Belleza & Bienestar", page_icon="💅", layout="wide")
 
+# Robust paths relative to repo root (this file's directory)
 BASE = Path(__file__).resolve().parent
 ASSETS = BASE / "assets"
 
@@ -16,10 +18,18 @@ REQUIRED = {
     "BNS2": ASSETS / "bienestar2.jpg",
 }
 
+# Debug sidebar
+with st.sidebar.expander("Depurar imágenes", expanded=False):
+    st.write("ASSETS:", ASSETS)
+    st.write("Existe assets?:", ASSETS.exists())
+    try:
+        st.write("Contenido:", os.listdir(ASSETS))
+    except Exception as e:
+        st.write("Error listando assets:", e)
+
 missing = [name for name, p in REQUIRED.items() if not p.exists() or p.stat().st_size == 0]
 if missing:
-    st.error("Faltan imágenes en la carpeta assets/: " + ", ".join(missing))
-    st.info(f"Ubicación esperada de assets: {ASSETS}")
+    st.error("Faltan imágenes en `assets/` o tienen tamaño 0: " + ", ".join(missing))
     st.stop()
 
 HERO = REQUIRED["HERO"]
@@ -27,6 +37,7 @@ ESM1 = REQUIRED["ESM1"]; ESM2 = REQUIRED["ESM2"]
 CRM1 = REQUIRED["CRM1"]; CRM2 = REQUIRED["CRM2"]
 BNS1 = REQUIRED["BNS1"]; BNS2 = REQUIRED["BNS2"]
 
+# Styles
 st.markdown(
     """
     <style>
@@ -95,5 +106,5 @@ with st.form("newsletter"):
     if st.form_submit_button("Quiero suscribirme"):
         st.success("¡Gracias! Te llegará un mensaje con novedades (demo).")
 
-st.caption("🖼️ Coloca tus fotos en la carpeta assets/ (junto a este archivo) y respeta los nombres de archivo.")
+st.caption("🖼️ Las imágenes vienen dentro de la carpeta `assets/`. Si no se ven, revisa el panel 'Depurar imágenes' en la barra lateral.")
 st.markdown("<footer>© 2025 Belleza & Bienestar · Página demo con Streamlit</footer>", unsafe_allow_html=True)
