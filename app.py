@@ -1,19 +1,37 @@
 import streamlit as st
-import os
+from pathlib import Path
 
 st.set_page_config(page_title="Belleza & Bienestar", page_icon="💅", layout="wide")
 
-ASSETS = "assets"
-# Asegúrate de que las imágenes existan en el repositorio (incluidas en assets/)
-HERO = os.path.join(ASSETS, "hero.jpg")
-ESM1 = os.path.join(ASSETS, "esmaltes1.jpg")
-ESM2 = os.path.join(ASSETS, "esmaltes2.jpg")
-CRM1 = os.path.join(ASSETS, "cremas1.jpg")
-CRM2 = os.path.join(ASSETS, "cremas2.jpg")
-BNS1 = os.path.join(ASSETS, "bienestar1.jpg")
-BNS2 = os.path.join(ASSETS, "bienestar2.jpg")
+# === Rutas robustas: siempre relativas a este archivo ===
+BASE = Path(__file__).resolve().parent
+ASSETS = BASE / "assets"
 
-# ---------- Styles ----------
+# Archivos requeridos
+REQUIRED = {
+    "HERO": ASSETS / "hero.jpg",
+    "ESM1": ASSETS / "esmaltes1.jpg",
+    "ESM2": ASSETS / "esmaltes2.jpg",
+    "CRM1": ASSETS / "cremas1.jpg",
+    "CRM2": ASSETS / "cremas2.jpg",
+    "BNS1": ASSETS / "bienestar1.jpg",
+    "BNS2": ASSETS / "bienestar2.jpg",
+}
+
+# Diagnóstico: si falta alguna imagen, muéstralo claramente
+missing = [name for name, p in REQUIRED.items() if not p.exists()]
+if missing:
+    st.error("Faltan estas imágenes en la carpeta `assets/` (respetar nombres y mayúsculas/minúsculas): "
+             + ", ".join(f"{name.lower()}.jpg" for name in missing))
+    st.info(f"Ubicación esperada de assets: {ASSETS}")
+    st.stop()
+
+HERO = REQUIRED["HERO"]
+ESM1 = REQUIRED["ESM1"]; ESM2 = REQUIRED["ESM2"]
+CRM1 = REQUIRED["CRM1"]; CRM2 = REQUIRED["CRM2"]
+BNS1 = REQUIRED["BNS1"]; BNS2 = REQUIRED["BNS2"]
+
+# === Estilos ===
 st.markdown(
     """
     <style>
@@ -28,23 +46,22 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ---------- Hero ----------
-st.image(HERO, use_container_width=True, caption=None)
+# === Hero ===
+st.image(str(HERO), use_container_width=True)
 st.markdown('<div class="pill">Belleza • Cuidado de la piel • Bienestar</div>', unsafe_allow_html=True)
 st.markdown('<div class="title-hero">Todo para tu rutina de belleza y bienestar — simple y natural</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle-hero">Esmaltes de larga duración, cremas hidratantes y accesorios para tu día a día.</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# ---------- Tabs & products ----------
+# === Tabs & productos ===
 tab1, tab2, tab3, tab4 = st.tabs(["✨ Destacados", "💅 Esmaltes", "🧴 Cremas & Serums", "🧘 Bienestar"])
 
-def product_card(image_path, title, desc, price):
-    with st.container():
-        st.image(image_path, use_container_width=True)
-        st.markdown(f"**{title}**")
-        st.markdown(f"<span class='muted'>{desc}</span>", unsafe_allow_html=True)
-        st.markdown(f"<span class='price'>Bs {price:.2f}</span>", unsafe_allow_html=True)
+def product_card(image_path: Path, title: str, desc: str, price: float):
+    st.image(str(image_path), use_container_width=True)
+    st.markdown(f"**{title}**")
+    st.markdown(f"<span class='muted'>{desc}</span>", unsafe_allow_html=True)
+    st.markdown(f"<span class='price'>Bs {price:.2f}</span>", unsafe_allow_html=True)
 
 with tab1:
     c1, c2, c3 = st.columns(3)
@@ -75,7 +92,6 @@ with tab4:
 
 st.divider()
 
-# ---------- Newsletter (demo) ----------
 st.subheader("📬 Novedades y promociones")
 with st.form("newsletter"):
     col1, col2 = st.columns([2,1])
@@ -83,9 +99,8 @@ with st.form("newsletter"):
         email = st.text_input("Tu correo electrónico")
     with col2:
         interes = st.selectbox("Tu interés", ["Esmaltes", "Cremas/Skincare", "Bienestar", "Todo"])
-    enviado = st.form_submit_button("Quiero suscribirme")
-    if enviado:
+    if st.form_submit_button("Quiero suscribirme"):
         st.success("¡Gracias! Te llegará un mensaje con novedades (demo).")
 
-st.caption("🖼️ Imágenes incluidas en la carpeta `assets/`. Reemplaza por tus fotos si lo deseas y usa los mismos nombres de archivo.")
+st.caption("🖼️ Usa la carpeta `assets/` junto a este archivo. Los nombres deben coincidir exactamente (Linux distingue mayúsculas/minúsculas).")
 st.markdown("<footer>© 2025 Belleza & Bienestar · Página demo con Streamlit</footer>", unsafe_allow_html=True)
